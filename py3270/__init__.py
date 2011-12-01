@@ -20,9 +20,7 @@ class KeyboardStateError(Exception):
     pass
 
 class FieldTruncateError(Exception):
-    """
-        A value is greater than the fields length
-    """
+    pass
 
 class Command(object):
     """
@@ -96,11 +94,8 @@ class Status(object):
 
 class Emulator(object):
     """
-        Spawns an x/s3270 emulator subprocess and provides an API for interacting
+        Represents an x/s3270 emulator subprocess and provides an API for interacting
         with it.
-
-        http://x3270.bgp.nu/x3270-man.html
-        http://x3270.bgp.nu/x3270-script.html
     """
 
     # these should be overriden in a subclass
@@ -122,6 +117,15 @@ class Emulator(object):
     ]
 
     def __init__(self, visible=False, timeout=3, _sp=None):
+        """
+            Create an emulator instance
+
+            `visible` controls which executable will be used.
+            `timeout` controls the timeout paramater to any Wait() command sent
+                to x3270.
+            `_sp` is normally not used but can be set to a mock object
+                during testing.
+        """
         if visible:
             args = [self.x3270_executable] + self.x3270_args + self.args_for_either
         else:
@@ -140,6 +144,11 @@ class Emulator(object):
         self.last_host = None
 
     def exec_command(self, cmdstr):
+        """
+            Execute an x3270 command
+
+            `cmdstr` gets sent directly to the x3270 subprocess on it's stdin.
+        """
         if self.is_terminated:
             raise TerminatedError('this TerminalClient instance has been terminated')
 
@@ -164,10 +173,16 @@ class Emulator(object):
             self.is_terminated = True
 
     def connect(self, host):
+        """
+            Connect to a host
+        """
         self.exec_command('Connect({0})'.format(host))
         self.last_host = host
 
     def reconnect(self):
+        """
+            Disconnect from the host and re-connect to the same host
+        """
         self.exec_command('Disconnect')
         self.connect(self.last_host)
 
@@ -199,6 +214,13 @@ class Emulator(object):
         self.exec_command('MoveCursor({0}, {1})'.format(ypos, xpos))
 
     def send_string(self, tosend, ypos=None, xpos=None):
+        """
+            Send a string to the screen at the current cursor location or at
+            screen co-ordinates `ypos`/`xpos` if they are both given.
+
+            Co-ordinates are 1 based, as listed in the status area of the
+            terminal.
+        """
         if xpos is not None and ypos is not None:
             self.move_to(ypos, xpos)
 
@@ -223,6 +245,12 @@ class Emulator(object):
         self.exec_command('PF(6)')
 
     def string_get(self, ypos, xpos, length):
+        """
+            Get a string of `length` at screen co-ordinates `ypos`/`xpos`
+
+            Co-ordinates are 1 based, as listed in the status area of the
+            terminal.
+        """
         # the screen's co-ordinates are 1 based, but the command is 0 based
         xpos -= 1
         ypos -= 1
@@ -232,13 +260,20 @@ class Emulator(object):
         return cmd.data[0]
 
     def string_found(self, ypos, xpos, string):
+        """
+            Return True if `string` is found at screen co-ordinates
+            `ypos`/`xpos`, False otherwise.
+
+            Co-ordinates are 1 based, as listed in the status area of the
+            terminal.
+        """
         if self.string_get(ypos, xpos, len(string)) == string:
             return True
         return False
 
     def delete_field(self):
         """
-            Delete contents in field at current cursor location, position
+            Delete contents in field at current cursor location and positions
             cursor at beginning of field.
         """
         self.exec_command('DeleteField')
@@ -248,11 +283,14 @@ class Emulator(object):
             clears the field at the position given and inserts the string
             `tosend`
 
-            ypos: the "y" position on the screen to start inserting (1 based)
-            xpos: the "x" position on the screen to start inserting (1 based)
             tosend: the string to insert
-            length: the length of the field. If `tosend` is greater than
-                `length`, an exception will be raised.
+            length: the length of the field
+
+            Co-ordinates are 1 based, as listed in the status area of the
+            terminal.
+
+            raises: FieldTruncateError if `tosend` is longer than
+                `length`.
         """
         if length - len(tosend) < 0:
             raise FieldTruncateError('length limit %d, but got "%s"' % (length, tosend))
