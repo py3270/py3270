@@ -3,7 +3,7 @@ Intro
 
 py3270 is a python interface to a x3270 or s3270 subprocess.
 
-Example:
+Example
 --------
 
 A brief example of usage::
@@ -37,7 +37,7 @@ A brief example of usage::
     # disconnect from host and kill subprocess
     em.terminate()
 
-Documentation:
+Documentation
 --------------
 
 None.  Read the code, its pretty self-explanatory  :)
