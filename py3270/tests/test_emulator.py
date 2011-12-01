@@ -5,10 +5,10 @@ from blazeutils.testing import raises
 import mock
 from nose.tools import eq_
 
-from py3270 import Emulator, Command, Status, FieldTruncateError, \
+from py3270 import EmulatorBase, Command, Status, FieldTruncateError, \
     TerminatedError, KeyboardStateError, CommandError
 
-class TEmulator(Emulator):
+class TEmulator(EmulatorBase):
     x3270_executable = '/fake/x3270'
     s3270_executable = '/fake/s3270'
 
@@ -67,7 +67,7 @@ class TestEmulator(object):
         em =  TEmulator(_sp=mock.Mock())
         assert not m_popen.called
 
-    @mock.patch('py3270.Emulator.exec_command')
+    @mock.patch('py3270.EmulatorBase.exec_command')
     def test_connect(self, m_ec):
         em =  MEmulator()
         assert em.last_host is None
@@ -75,7 +75,7 @@ class TestEmulator(object):
         assert em.last_host == 'localhost'
         m_ec.assert_called_once_with('Connect(localhost)')
 
-    @mock.patch('py3270.Emulator.exec_command')
+    @mock.patch('py3270.EmulatorBase.exec_command')
     def test_terminate(self, m_ec):
         em =  MEmulator()
         em.terminate()
@@ -89,7 +89,7 @@ class TestEmulator(object):
         em.terminate()
         em.connect('localhost')
 
-    @mock.patch('py3270.Emulator.exec_command')
+    @mock.patch('py3270.EmulatorBase.exec_command')
     def test_exec_methods(self, m_ec):
         em =  MEmulator()
 
@@ -121,8 +121,8 @@ class TestEmulator(object):
             mock.call('String("foobar")'),
         ])
 
-    @mock.patch('py3270.Emulator.connect')
-    @mock.patch('py3270.Emulator.exec_command')
+    @mock.patch('py3270.EmulatorBase.connect')
+    @mock.patch('py3270.EmulatorBase.exec_command')
     def test_reconnect(self, m_ec, m_connect):
         em =  MEmulator()
         em.last_host = 'foo'
@@ -133,7 +133,7 @@ class TestEmulator(object):
             mock.call('foo'),
         ])
 
-    @mock.patch('py3270.Emulator.exec_command')
+    @mock.patch('py3270.EmulatorBase.exec_command')
     def test_fill_field(self, m_ec):
         em =  MEmulator()
 
@@ -158,7 +158,7 @@ class TestEmulator(object):
             mock.call('String("foobar")'),
         ])
 
-    @mock.patch('py3270.Emulator.exec_command')
+    @mock.patch('py3270.EmulatorBase.exec_command')
     def test_string_get(self, m_ec):
         em =  MEmulator()
         m_ec.return_value.data = ['foobar']
@@ -167,13 +167,13 @@ class TestEmulator(object):
         m_ec.assert_called_with('Ascii(6,8,5)')
 
     @raises(AssertionError)
-    @mock.patch('py3270.Emulator.exec_command')
+    @mock.patch('py3270.EmulatorBase.exec_command')
     def test_string_get_too_much_data(self, m_ec):
         em =  MEmulator()
         m_ec.return_value.data = ['foobar', 'baz']
         em.string_get(7,9,5)
 
-    @mock.patch('py3270.Emulator.string_get')
+    @mock.patch('py3270.EmulatorBase.string_get')
     def test_string_found(self, m_string_get):
         em =  MEmulator()
         m_string_get.return_value = 'foobar'
@@ -188,7 +188,7 @@ class TestEmulator(object):
         em =  MEmulator()
         em.fill_field(1, 1, 'foobar', 5)
 
-    @mock.patch('py3270.Emulator.exec_command')
+    @mock.patch('py3270.EmulatorBase.exec_command')
     def test_wait_for_field(self, m_ec):
         em =  MEmulator()
         em.status.keyboard = 'U'
@@ -196,7 +196,7 @@ class TestEmulator(object):
 
         m_ec.assert_called_once_with('Wait(3, InputField)')
 
-    @mock.patch('py3270.Emulator.exec_command')
+    @mock.patch('py3270.EmulatorBase.exec_command')
     def test_wait_for_field_custom_timeout(self, m_ec):
         em =  MEmulator(timeout=5)
         em.status.keyboard = 'U'
@@ -205,7 +205,7 @@ class TestEmulator(object):
         m_ec.assert_called_once_with('Wait(5, InputField)')
 
     @raises(KeyboardStateError, 'keyboard not unlocked, state was: E')
-    @mock.patch('py3270.Emulator.exec_command')
+    @mock.patch('py3270.EmulatorBase.exec_command')
     def test_wait_for_field_exception(self, m_ec):
         em =  MEmulator()
         em.status.keyboard = 'E'

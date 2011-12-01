@@ -92,7 +92,7 @@ class Status(object):
     def __str__(self):
         return 'STATUS: {0}'.format(self.as_string)
 
-class Emulator(object):
+class EmulatorBase(object):
     """
         Represents an x/s3270 emulator subprocess and provides an API for interacting
         with it.
