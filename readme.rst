@@ -1,10 +1,12 @@
 Intro
 -----
 
-py3270 is python interface to a x3270 or s3270 subprocess.
+py3270 is a python interface to a x3270 or s3270 subprocess.
 
 Example:
 --------
+
+A brief example of usage::
 
     from py3270 import EmulatorBase
 
@@ -19,8 +21,8 @@ Example:
     em = Emulator()
 
     em.connect('3270host.example.com')
-    em.fill_field(17, 23, loginid, 8)
-    em.fill_field(18, 23, password, 8)
+    em.fill_field(17, 23, 'mylogin', 8)
+    em.fill_field(18, 23, 'mypass', 8)
     em.send_enter()
 
     # if your host unlocks the keyboard before truly being ready you can use:
@@ -42,10 +44,10 @@ None.  Read the code, its pretty self-explanatory  :)
 
 More information on x3270/s3270 can be found at:
 
-http://x3270.bgp.nu/
-http://x3270.bgp.nu/x3270-man.html
-http://x3270.bgp.nu/s3270-man.html
-http://x3270.bgp.nu/x3270-script.html
+* http://x3270.bgp.nu/
+* http://x3270.bgp.nu/x3270-man.html
+* http://x3270.bgp.nu/s3270-man.html
+* http://x3270.bgp.nu/x3270-script.html
 
 Questions & Comments
 ---------------------
