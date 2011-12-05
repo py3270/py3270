@@ -1,7 +1,8 @@
 Intro
 -----
 
-py3270 is a python interface to a x3270 or s3270 subprocess.
+py3270 is a Python interface to x3270, an IBM 3270 terminal emulator.  It
+provides an API to a x3270 or s3270 subprocess.
 
 Example
 --------

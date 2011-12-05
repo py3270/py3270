@@ -22,7 +22,7 @@ class DevelopCmd(STDevelopCmd):
 setup(
     name='py3270',
     version=VERSION,
-    description="An interface to x3270, an IBM 3270 terminal emulator",
+    description="A Python interface to x3270, an IBM 3270 terminal emulator",
     long_description= readme_rst + '\n\n' + changelog_rst,
     classifiers=[
         'Development Status :: 4 - Beta',
