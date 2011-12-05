@@ -231,6 +231,13 @@ class TestCommand(object):
         cmd.execute()
         eq_(cmd.data, ['foo', 'bar'])
 
+    def test_data_windows_line_endings(self):
+        data = 'data: foo\r\n'
+        data += 'data: bar\r\n'
+        cmd = MCommand(data)
+        cmd.execute()
+        eq_(cmd.data, ['foo', 'bar'])
+
     @raises(CommandError, 'some kind of error')
     def test_error_response(self):
         data = 'data: some kind \n'

@@ -49,8 +49,8 @@ class Command(object):
                 log.debug('result line: %s', result)
                 return self.handle_result(result)
 
-            # remove the 'data: ' prefix and trailing newline and store
-            self.data.append(line[6:-1])
+            # remove the 'data: ' prefix and trailing newline char(s) and store
+            self.data.append(line[6:].rstrip('\n\r'))
 
     def handle_result(self, result):
         # should receive 'ok' for almost everything, but Quit returns a '' for
