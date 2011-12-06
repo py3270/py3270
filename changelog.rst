@@ -1,6 +1,11 @@
 Change Log
 ----------
 
+0.1.3 released 2011-12-06
+=========================
+
+* had messed up a previous upload to pypi releasing a fixed 0.1.1 as 0.1.2, so
+    need to go to next version number
 
 0.1.2 released 2011-12-06
 =========================
