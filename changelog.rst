@@ -2,7 +2,7 @@ Change Log
 ----------
 
 
-0.1.2 released ???
+0.1.2 released 2011-12-06
 =========================
 
 * fix data parsing on Windows
