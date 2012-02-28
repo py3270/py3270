@@ -172,6 +172,17 @@ class EmulatorBase(object):
             self.exec_command('Quit')
             self.is_terminated = True
 
+    def is_connected(self):
+        """
+            Return bool indicating connection state
+        """
+        # this is basically a no-op, but it results in the the current status
+        # getting updated
+        self.exec_command('ignore')
+
+        # connected status is like 'C(192.168.1.1)', disconnected is 'N'
+        return self.status.connection_state.startswith('C(')
+
     def connect(self, host):
         """
             Connect to a host

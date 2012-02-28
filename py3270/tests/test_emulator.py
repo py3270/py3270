@@ -211,6 +211,24 @@ class TestEmulator(object):
         em.status.keyboard = 'E'
         em.wait_for_field()
 
+    @mock.patch('py3270.EmulatorBase.exec_command')
+    def test_not_is_connected(self, m_ec):
+        em =  MEmulator()
+        def assign_status(*args, **kwargs):
+            em.status.connection_state = 'N'
+        m_ec.side_effect = assign_status
+        assert not em.is_connected()
+        m_ec.assert_called_once_with('ignore')
+
+    @mock.patch('py3270.EmulatorBase.exec_command')
+    def test_is_connected(self, m_ec):
+        em =  MEmulator()
+        def assign_status(*args, **kwargs):
+            em.status.connection_state = 'C(192.168.1.1)'
+        m_ec.side_effect = assign_status
+        assert em.is_connected()
+        m_ec.assert_called_once_with('ignore')
+
 class TestCommand(object):
 
     def test_defaults(self):
