@@ -5,7 +5,7 @@ import time
 
 log = logging.getLogger(__name__)
 
-VERSION = '0.1.4'
+VERSION = '0.1.5'
 
 class CommandError(Exception):
     pass
