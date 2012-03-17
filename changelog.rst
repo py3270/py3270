@@ -1,7 +1,7 @@
 Change Log
 ----------
 
-0.1.4 released ???
+0.1.4 released 2012-03-17
 =========================
 
 - added is_connected() method
