@@ -309,3 +309,6 @@ class EmulatorBase(object):
             self.move_to(ypos, xpos)
         self.delete_field()
         self.send_string(tosend)
+
+    def save_screen(self, file_path):
+        self.exec_command('PrintText(html,file,{0})'.format(file_path))
