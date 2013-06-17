@@ -1,7 +1,10 @@
 Change Log
 ----------
 
-0.1.4 released 2012-06-17
+0.1.6 released ???
+=========================
+
+0.1.5 released 2013-06-17
 =========================
 
 - changed default timeout to 30 seconds
