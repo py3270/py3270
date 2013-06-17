@@ -1,6 +1,12 @@
 Change Log
 ----------
 
+0.1.4 released 2012-06-17
+=========================
+
+- changed default timeout to 30 seconds
+- added send_pf7(), send_pf8()
+
 0.1.4 released 2012-03-17
 =========================
 

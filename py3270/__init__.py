@@ -116,7 +116,7 @@ class EmulatorBase(object):
         '-xrm', 's3270.unlockDelay: False'
     ]
 
-    def __init__(self, visible=False, timeout=3, _sp=None):
+    def __init__(self, visible=False, timeout=30, _sp=None):
         """
             Create an emulator instance
 
@@ -255,6 +255,12 @@ class EmulatorBase(object):
     def send_pf6(self):
         self.exec_command('PF(6)')
 
+    def send_pf7(self):
+        self.exec_command('PF(7)')
+
+    def send_pf8(self):
+        self.exec_command('PF(8)')
+
     def string_get(self, ypos, xpos, length):
         """
             Get a string of `length` at screen co-ordinates `ypos`/`xpos`
@@ -278,9 +284,9 @@ class EmulatorBase(object):
             Co-ordinates are 1 based, as listed in the status area of the
             terminal.
         """
-        if self.string_get(ypos, xpos, len(string)) == string:
-            return True
-        return False
+        found = self.string_get(ypos, xpos, len(string))
+        log.debug('string_found() saw "{0}"'.format(found))
+        return found == string
 
     def delete_field(self):
         """
