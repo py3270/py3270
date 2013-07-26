@@ -34,6 +34,8 @@ class Command(object):
 
     def execute(self):
         self.sp.stdin.write(self.cmdstr + '\n')
+        # avoid buffering problems
+        self.sp.stdin.flush()
 
         # x3270 puts data lines (if any) on stdout prefixed with 'data: '
         # followed by two more lines without the prefix.
