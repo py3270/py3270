@@ -3,26 +3,44 @@ import subprocess
 
 from blazeutils.testing import raises
 import mock
+from nose.plugins.skip import SkipTest
 from nose.tools import eq_
 
-from py3270 import EmulatorBase, Command, Status, FieldTruncateError, \
+from py3270 import EmulatorBase, Emulator, Command, Status, FieldTruncateError, \
     TerminatedError, KeyboardStateError, CommandError
 
-class TEmulator(EmulatorBase):
-    x3270_executable = '/fake/x3270'
-    s3270_executable = '/fake/s3270'
 
-class MEmulator(TEmulator):
+class MEmulator(Emulator):
     def __init__(self, visible=False, timeout=3):
-        TEmulator.__init__(self, visible, timeout, _sp=mock.Mock())
+        Emulator.__init__(self, visible, timeout, _sp=mock.Mock())
+
 
 class MCommand(Command):
     def __init__(self, data='', result='ok', cmdstr='testcmd'):
-        Command.__init__(self, mock.Mock(), cmdstr)
+        Command.__init__(self, ExamApp(data, result), cmdstr)
+
+
+class ExamApp(object):
+    """ An object with an interface like ExecutableApp used for testing """
+
+    def __init__(self, data='', result='ok'):
+        self.stdin = StringIO()
+
         response = data
         response += '' * 12 + '\n'
         response += result + '\n'
-        self.sp.stdout = StringIO(response)
+        self.stdout = StringIO(response)
+
+    def connect(self, host):
+        return False
+
+    def write(self, data):
+        self.stdin.write(data)
+        self.stdin.flush()
+
+    def readline(self):
+        return self.stdout.readline()
+
 
 class TestStatus(object):
 
@@ -42,42 +60,20 @@ class TestStatus(object):
         s = Status(statstr)
         eq_(str(s), 'STATUS: ' + statstr)
 
+
 class TestEmulator(object):
 
-    @mock.patch('py3270.subprocess.Popen')
-    def test_sp_creation(self, m_popen):
-        em =  TEmulator()
-        m_popen.assert_called_once_with(
-            ['/fake/s3270', '-xrm', 's3270.unlockDelay: False'],
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-        )
-        assert not em.is_terminated
-        eq_(em.status.as_string, '')
-        eq_(em.status.keyboard, None)
-
-    @mock.patch('py3270.subprocess.Popen')
-    def test_visible_setting(self, m_popen):
-        TEmulator(visible=True)
-        eq_(m_popen.call_args[0][0][0], '/fake/x3270')
-
-    @mock.patch('py3270.subprocess.Popen')
-    def test_sp_creation_for_testing(self, m_popen):
-        em =  TEmulator(_sp=mock.Mock())
-        assert not m_popen.called
-
-    @mock.patch('py3270.EmulatorBase.exec_command')
+    @mock.patch('py3270.Emulator.exec_command')
     def test_connect(self, m_ec):
-        em =  MEmulator()
+        em = MEmulator()
         assert em.last_host is None
         em.connect('localhost')
         assert em.last_host == 'localhost'
         m_ec.assert_called_once_with('Connect(localhost)')
 
-    @mock.patch('py3270.EmulatorBase.exec_command')
+    @mock.patch('py3270.Emulator.exec_command')
     def test_terminate(self, m_ec):
-        em =  MEmulator()
+        em = MEmulator()
         em.terminate()
         m_ec.assert_called_once_with('Quit')
         assert em.is_terminated
@@ -85,13 +81,13 @@ class TestEmulator(object):
     @raises(TerminatedError)
     @mock.patch('py3270.Command')
     def test_command_after_terminate(self, m_cmd):
-        em =  MEmulator()
+        em = MEmulator()
         em.terminate()
         em.connect('localhost')
 
-    @mock.patch('py3270.EmulatorBase.exec_command')
+    @mock.patch('py3270.Emulator.exec_command')
     def test_exec_methods(self, m_ec):
-        em =  MEmulator()
+        em = MEmulator()
 
         em.send_enter()
         m_ec.assert_called_with('Enter')
@@ -121,10 +117,10 @@ class TestEmulator(object):
             mock.call('String("foobar")'),
         ])
 
-    @mock.patch('py3270.EmulatorBase.connect')
-    @mock.patch('py3270.EmulatorBase.exec_command')
+    @mock.patch('py3270.Emulator.connect')
+    @mock.patch('py3270.Emulator.exec_command')
     def test_reconnect(self, m_ec, m_connect):
-        em =  MEmulator()
+        em = MEmulator()
         em.last_host = 'foo'
         em.reconnect()
         m_ec.assert_called_once_with('Disconnect')
@@ -133,9 +129,9 @@ class TestEmulator(object):
             mock.call('foo'),
         ])
 
-    @mock.patch('py3270.EmulatorBase.exec_command')
+    @mock.patch('py3270.Emulator.exec_command')
     def test_fill_field(self, m_ec):
-        em =  MEmulator()
+        em = MEmulator()
 
         em.fill_field(7, 9, 'foobar', 6)
         eq_(m_ec.call_args_list, [
@@ -158,24 +154,24 @@ class TestEmulator(object):
             mock.call('String("foobar")'),
         ])
 
-    @mock.patch('py3270.EmulatorBase.exec_command')
+    @mock.patch('py3270.Emulator.exec_command')
     def test_string_get(self, m_ec):
-        em =  MEmulator()
+        em = MEmulator()
         m_ec.return_value.data = ['foobar']
         result = em.string_get(7,9,5)
         eq_(result, 'foobar')
         m_ec.assert_called_with('Ascii(6,8,5)')
 
     @raises(AssertionError)
-    @mock.patch('py3270.EmulatorBase.exec_command')
+    @mock.patch('py3270.Emulator.exec_command')
     def test_string_get_too_much_data(self, m_ec):
-        em =  MEmulator()
+        em = MEmulator()
         m_ec.return_value.data = ['foobar', 'baz']
         em.string_get(7,9,5)
 
-    @mock.patch('py3270.EmulatorBase.string_get')
+    @mock.patch('py3270.Emulator.string_get')
     def test_string_found(self, m_string_get):
-        em =  MEmulator()
+        em = MEmulator()
         m_string_get.return_value = 'foobar'
 
         assert em.string_found(7,9,'foobar')
@@ -185,18 +181,18 @@ class TestEmulator(object):
 
     @raises(FieldTruncateError, 'length limit 5, but got "foobar"')
     def test_fill_field_length_error(self):
-        em =  MEmulator()
+        em = MEmulator()
         em.fill_field(1, 1, 'foobar', 5)
 
-    @mock.patch('py3270.EmulatorBase.exec_command')
+    @mock.patch('py3270.Emulator.exec_command')
     def test_wait_for_field(self, m_ec):
-        em =  MEmulator()
+        em = MEmulator()
         em.status.keyboard = 'U'
         em.wait_for_field()
 
         m_ec.assert_called_once_with('Wait(3, InputField)')
 
-    @mock.patch('py3270.EmulatorBase.exec_command')
+    @mock.patch('py3270.Emulator.exec_command')
     def test_wait_for_field_custom_timeout(self, m_ec):
         em =  MEmulator(timeout=5)
         em.status.keyboard = 'U'
@@ -205,29 +201,34 @@ class TestEmulator(object):
         m_ec.assert_called_once_with('Wait(5, InputField)')
 
     @raises(KeyboardStateError, 'keyboard not unlocked, state was: E')
-    @mock.patch('py3270.EmulatorBase.exec_command')
+    @mock.patch('py3270.Emulator.exec_command')
     def test_wait_for_field_exception(self, m_ec):
-        em =  MEmulator()
+        em = MEmulator()
         em.status.keyboard = 'E'
         em.wait_for_field()
 
-    @mock.patch('py3270.EmulatorBase.exec_command')
+    @mock.patch('py3270.Emulator.exec_command')
     def test_not_is_connected(self, m_ec):
-        em =  MEmulator()
+        em = MEmulator()
         def assign_status(*args, **kwargs):
             em.status.connection_state = 'N'
         m_ec.side_effect = assign_status
         assert not em.is_connected()
         m_ec.assert_called_once_with('ignore')
 
-    @mock.patch('py3270.EmulatorBase.exec_command')
+    @mock.patch('py3270.Emulator.exec_command')
     def test_is_connected(self, m_ec):
-        em =  MEmulator()
+        em = MEmulator()
         def assign_status(*args, **kwargs):
             em.status.connection_state = 'C(192.168.1.1)'
         m_ec.side_effect = assign_status
         assert em.is_connected()
         m_ec.assert_called_once_with('ignore')
+
+    @raises(Exception, 'EmulatorBase has been replaced by Emulator.')
+    def test_emulatorbase_exception(self):
+        EmulatorBase()
+
 
 class TestCommand(object):
 
@@ -237,10 +238,11 @@ class TestCommand(object):
         eq_(cmd.status_line, None)
         eq_(cmd.data, [])
 
-    def test_stdin(self):
+    @mock.patch.object(ExamApp, 'write')
+    def test_stdin(self, m_write):
         cmd = MCommand()
         cmd.execute()
-        cmd.sp.stdin.write.assert_called_once_with('testcmd\n')
+        cmd.app.write.assert_called_once_with('testcmd\n')
 
     def test_data(self):
         data = 'data: foo\n'
@@ -282,3 +284,35 @@ class TestCommand(object):
         cmd = MCommand(result='', cmdstr='Quit')
         # running without exception is sufficient for this test
         cmd.execute()
+
+class TestExecutableApp(object):
+    """
+        all these tests used to be part of the emulator testing, but they need to be refactored
+        now that we are using ExecutableApp
+
+    """
+    def setUp(object):
+        raise SkipTest
+
+    @mock.patch('py3270.subprocess.Popen')
+    def test_sp_creation(self, m_popen):
+        em = TEmulator()
+        m_popen.assert_called_once_with(
+            ['/fake/s3270', '-xrm', 's3270.unlockDelay: False'],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        assert not em.is_terminated
+        eq_(em.status.as_string, '')
+        eq_(em.status.keyboard, None)
+
+    @mock.patch('py3270.subprocess.Popen')
+    def test_visible_setting(self, m_popen):
+        TEmulator(visible=True)
+        eq_(m_popen.call_args[0][0][0], '/fake/x3270')
+
+    @mock.patch('py3270.subprocess.Popen')
+    def test_sp_creation_for_testing(self, m_popen):
+        em =  TEmulator(_sp=mock.Mock())
+        assert not m_popen.called
