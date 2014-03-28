@@ -197,9 +197,6 @@ class ws3270App(ExecutableApp):
     # see notes for args in x3270App
     args = [
         '-xrm', 'ws3270.unlockDelay: False',
-        '-xrm', 'ws3270.dsTrace: True',
-        '-xrm', r'ws3270.traceDir: C:\Users\rsyring\dev\customers\pai\hllapi-src\logs',
-        '-xrm', 'ws3270.screenTrace: True',
     ]
 
 
