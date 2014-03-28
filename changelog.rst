@@ -1,8 +1,12 @@
 Change Log
 ----------
 
-0.1.6 released ???
+0.2.0 released 2014-03-28
 =========================
+
+- Add Windows support, but not tested thoroughly.  Consider Windows support Experimental.
+- use x3270 executables from PATH instead of requiring ExamBase to be subclassed
+- fix buffering problems when writing to x3270 subprocess
 
 0.1.5 released 2013-06-17
 =========================
