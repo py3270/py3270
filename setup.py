@@ -13,7 +13,7 @@ class DevelopCmd(STDevelopCmd):
         # add in requirements for testing only when using the develop command
         self.distribution.install_requires.extend([
             'nose',
-            'mock>=0.7.999',
+            'mock',
             'blazeutils',
             'coverage',
         ])
@@ -35,7 +35,7 @@ setup(
         'Topic :: Terminals :: Terminal Emulators/X Terminals'
     ],
     author='Randy Syring',
-    author_email='rsyring@gmail.com',
+    author_email='randy@thesyrings.us',
     url='https://bitbucket.org/rsyring/py3270',
     license='BSD',
     packages=find_packages(),
