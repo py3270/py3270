@@ -1,5 +1,7 @@
 import logging
+import os
 from os import path as osp
+import socket
 import subprocess
 import time
 
@@ -26,28 +28,26 @@ class Command(object):
     """
         Represents a x3270 script command
     """
-    def __init__(self, sp, cmdstr):
-        self.sp = sp
+    def __init__(self, app, cmdstr):
+        self.app = app
         self.cmdstr = cmdstr
         self.status_line = None
         self.data = []
 
     def execute(self):
-        self.sp.stdin.write(self.cmdstr + '\n')
-        # avoid buffering problems
-        self.sp.stdin.flush()
+        self.app.write(self.cmdstr + '\n')
 
         # x3270 puts data lines (if any) on stdout prefixed with 'data: '
         # followed by two more lines without the prefix.
         # 1: status of the emulator
         # 2: 'ok' or 'error' indicating whether the command succeeded or failed
         while True:
-            line = self.sp.stdout.readline()
+            line = self.app.readline()
             log.debug('stdout line: %s', line.rstrip())
             if not line.startswith('data:'):
                 # ok, we are at the status line
                 self.status_line = line.rstrip()
-                result = self.sp.stdout.readline().rstrip()
+                result = self.app.readline().rstrip()
                 log.debug('result line: %s', result)
                 return self.handle_result(result)
 
@@ -94,31 +94,127 @@ class Status(object):
     def __str__(self):
         return 'STATUS: {0}'.format(self.as_string)
 
+class ExecutableApp(object):
+    executable = None
+    args = [
+        '-xrm', 's3270.unlockDelay: False'
+    ]
+
+    def __init__(self):
+        self.sp = None
+        self.spawn_app()
+
+    def spawn_app(self):
+        args = [self.executable] + self.args
+        self.sp = subprocess.Popen(
+            args,
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+
+    def connect(self, host):
+        """ this is a no-op for all but wc3270 """
+        return False
+
+    def write(self, data):
+        self.sp.stdin.write(data)
+        self.sp.stdin.flush()
+
+    def readline(self):
+        return self.sp.stdout.readline()
+
+class x3270App(ExecutableApp):
+    executable = 'x3270'
+    # Per Paul Mattes, in the first days of x3270, there were servers that
+    # would unlock the keyboard before they had processed the command. To
+    # work around that, when AID commands are sent, there is a 350ms delay
+    # before the command returns. This arg turns that feature off for
+    # performance reasons.
+    args = ['-xrm', 'x3270.unlockDelay: False', '-script']
+
+class s3270App(ExecutableApp):
+    executable = 's3270'
+    # see notes for args in x3270App
+    args = ['-xrm', 's3270.unlockDelay: False']
+
+class NotConnectedException(Exception):
+    pass
+
+class wc3270App(ExecutableApp):
+    executable = 'wc3270-insecure'
+    # see notes for args in x3270App
+    args = ['-xrm', 'wc3270.unlockDelay: False']
+    script_port = 17938
+
+    def __init__(self):
+        self.sp = None
+        self.socket_fh = None
+
+    def connect(self, host):
+        self.spawn_app(host)
+        self.make_socket()
+        return True
+
+    def spawn_app(self, host):
+        args = ['start', '/wait', self.executable] + self.args
+        args.extend(['-scriptport', str(self.script_port), host])
+        self.sp = subprocess.Popen(
+            args,
+            shell=True,
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+
+    def make_socket(self):
+        self.socket = sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        count = 0
+        while count < 15:
+            try:
+                sock.connect(('127.0.0.1', self.script_port))
+                break
+            except socket.error, e:
+                if 'actively refused it' not in str(e):
+                    raise
+                time.sleep(1)
+                count += 1
+        self.socket_fh = sock.makefile()
+
+    def write(self, data):
+        if self.socket_fh is None:
+            raise NotConnectedException
+        self.socket_fh.write(data)
+        self.socket_fh.flush()
+
+    def readline(self):
+        if self.socket_fh is None:
+            raise NotConnectedException
+        return self.socket_fh.readline()
+
+class ws3270App(ExecutableApp):
+    executable = 'ws3270-insecure'
+    # see notes for args in x3270App
+    args = [
+        '-xrm', 'ws3270.unlockDelay: False',
+        '-xrm', 'ws3270.dsTrace: True',
+        '-xrm', r'ws3270.traceDir: C:\Users\rsyring\dev\customers\pai\hllapi-src\logs',
+        '-xrm', 'ws3270.screenTrace: True',
+    ]
+
+
 class EmulatorBase(object):
+    def __init__(self, visible=False, timeout=30, app=None, _sp=None):
+        raise Exception("EmulatorBase has been replaced by Emulator.  See readme.rst.")
+
+
+class Emulator(object):
     """
         Represents an x/s3270 emulator subprocess and provides an API for interacting
         with it.
     """
 
-    # these should be overriden in a subclass
-    x3270_executable = None
-    s3270_executable = None
-
-    # additional command line args to the executable
-    x3270_args = ['-script']
-    s3270_args = []
-
-    # arguments that apply to either executable
-    args_for_either = [
-        # Per Paul Mattes, in the first days of x3270, there were servers that
-        # would unlock the keyboard before they had processed the command. To
-        # work around that, when AID commands are sent, there is a 350ms delay
-        # before the command returns. This arg turns that feature off for
-        # performance reasons.
-        '-xrm', 's3270.unlockDelay: False'
-    ]
-
-    def __init__(self, visible=False, timeout=30, _sp=None):
+    def __init__(self, visible=False, timeout=30, app=None, _sp=None):
         """
             Create an emulator instance
 
@@ -128,22 +224,20 @@ class EmulatorBase(object):
             `_sp` is normally not used but can be set to a mock object
                 during testing.
         """
-        if visible:
-            args = [self.x3270_executable] + self.x3270_args + self.args_for_either
-        else:
-            args = [self.s3270_executable] + self.s3270_args + self.args_for_either
-
-        # use _sp for passing in mock objects during testing
-        self.sp = _sp or subprocess.Popen(
-            args,
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-        )
+        self.app = app or self.create_app(visible)
         self.is_terminated = False
         self.status = Status(None)
         self.timeout = timeout
         self.last_host = None
+
+    def create_app(self, visible):
+        if os.name == 'nt':
+            if visible:
+                return wc3270App()
+            return ws3270App()
+        if visible:
+            return x3270App()
+        return s3270App()
 
     def exec_command(self, cmdstr):
         """
@@ -155,7 +249,7 @@ class EmulatorBase(object):
             raise TerminatedError('this TerminalClient instance has been terminated')
 
         log.debug('sending command: %s', cmdstr)
-        c = Command(self.sp, cmdstr)
+        c = Command(self.app, cmdstr)
         start = time.time()
         c.execute()
         elapsed = time.time() - start
@@ -171,25 +265,36 @@ class EmulatorBase(object):
         """
         if not self.is_terminated:
             log.debug('terminal client terminated')
-            self.exec_command('Quit')
+            try:
+                self.exec_command('Quit')
+            except socket.error, e:
+                if 'was forcibly closed' not in str(e):
+                    raise
+                # this can happen because wc3270 closes the socket before
+                # the read() can happen, causing a socket error
             self.is_terminated = True
 
     def is_connected(self):
         """
             Return bool indicating connection state
         """
-        # this is basically a no-op, but it results in the the current status
-        # getting updated
-        self.exec_command('ignore')
+        # need to wrap in try/except b/c of wc3270's socket connection dynamics
+        try:
+            # this is basically a no-op, but it results in the the current status
+            # getting updated
+            self.exec_command('ignore')
 
-        # connected status is like 'C(192.168.1.1)', disconnected is 'N'
-        return self.status.connection_state.startswith('C(')
+            # connected status is like 'C(192.168.1.1)', disconnected is 'N'
+            return self.status.connection_state.startswith('C(')
+        except NotConnectedException:
+            return False
 
     def connect(self, host):
         """
             Connect to a host
         """
-        self.exec_command('Connect({0})'.format(host))
+        if not self.app.connect(host):
+            self.exec_command('Connect({0})'.format(host))
         self.last_host = host
 
     def reconnect(self):
