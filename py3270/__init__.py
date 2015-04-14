@@ -142,7 +142,7 @@ class NotConnectedException(Exception):
     pass
 
 class wc3270App(ExecutableApp):
-    executable = 'wc3270-insecure'
+    executable = 'wc3270'
     # see notes for args in x3270App
     args = ['-xrm', 'wc3270.unlockDelay: False']
     script_port = 17938
@@ -193,7 +193,7 @@ class wc3270App(ExecutableApp):
         return self.socket_fh.readline()
 
 class ws3270App(ExecutableApp):
-    executable = 'ws3270-insecure'
+    executable = 'ws3270'
     # see notes for args in x3270App
     args = [
         '-xrm', 'ws3270.unlockDelay: False',
