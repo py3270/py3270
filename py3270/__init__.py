@@ -11,7 +11,7 @@ import warnings
 
 log = logging.getLogger(__name__)
 
-VERSION = '0.3.0'
+VERSION = '0.3.1'
 
 
 class CommandError(Exception):
