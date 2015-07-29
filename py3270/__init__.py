@@ -1,41 +1,54 @@
+from __future__ import absolute_import
+from __future__ import unicode_literals
+
 import logging
 import os
-from os import path as osp
+import six
 import socket
 import subprocess
 import time
+import warnings
 
 log = logging.getLogger(__name__)
 
 VERSION = '0.2.1'
 
+
 class CommandError(Exception):
     pass
+
 
 class TerminatedError(Exception):
     pass
 
+
 class WaitError(Exception):
     pass
+
 
 class KeyboardStateError(Exception):
     pass
 
+
 class FieldTruncateError(Exception):
     pass
+
 
 class Command(object):
     """
         Represents a x3270 script command
     """
     def __init__(self, app, cmdstr):
+        if isinstance(cmdstr, six.text_type):
+            warnings.warn('Commands should be byte strings', stacklevel=3)
+            cmdstr = cmdstr.encode('ascii')
         self.app = app
         self.cmdstr = cmdstr
         self.status_line = None
         self.data = []
 
     def execute(self):
-        self.app.write(self.cmdstr + '\n')
+        self.app.write(self.cmdstr + b'\n')
 
         # x3270 puts data lines (if any) on stdout prefixed with 'data: '
         # followed by two more lines without the prefix.
@@ -57,7 +70,7 @@ class Command(object):
     def handle_result(self, result):
         # should receive 'ok' for almost everything, but Quit returns a '' for
         # some reason
-        if result == '' and self.cmdstr == 'Quit':
+        if result == '' and self.cmdstr == b'Quit':
             return
         if result == 'ok':
             return
@@ -68,6 +81,7 @@ class Command(object):
         if self.data:
             msg = ''.join(self.data).rstrip()
         raise CommandError(msg)
+
 
 class Status(object):
     """
@@ -93,6 +107,7 @@ class Status(object):
 
     def __str__(self):
         return 'STATUS: {0}'.format(self.as_string)
+
 
 class ExecutableApp(object):
     executable = None
@@ -122,7 +137,10 @@ class ExecutableApp(object):
         self.sp.stdin.flush()
 
     def readline(self):
-        return self.sp.stdout.readline()
+        line = self.sp.stdout.readline()
+        # todo: is line really ascii?
+        return line.decode('ascii')
+
 
 class x3270App(ExecutableApp):
     executable = 'x3270'
@@ -133,13 +151,16 @@ class x3270App(ExecutableApp):
     # performance reasons.
     args = ['-xrm', 'x3270.unlockDelay: False', '-script']
 
+
 class s3270App(ExecutableApp):
     executable = 's3270'
     # see notes for args in x3270App
     args = ['-xrm', 's3270.unlockDelay: False']
 
+
 class NotConnectedException(Exception):
     pass
+
 
 class wc3270App(ExecutableApp):
     executable = 'wc3270'
@@ -174,7 +195,7 @@ class wc3270App(ExecutableApp):
             try:
                 sock.connect(('127.0.0.1', self.script_port))
                 break
-            except socket.error, e:
+            except socket.error as e:
                 if 'actively refused it' not in str(e):
                     raise
                 time.sleep(1)
@@ -191,6 +212,7 @@ class wc3270App(ExecutableApp):
         if self.socket_fh is None:
             raise NotConnectedException
         return self.socket_fh.readline()
+
 
 class ws3270App(ExecutableApp):
     executable = 'ws3270'
@@ -263,12 +285,16 @@ class Emulator(object):
         if not self.is_terminated:
             log.debug('terminal client terminated')
             try:
-                self.exec_command('Quit')
-            except socket.error, e:
+                self.exec_command(b'Quit')
+            except BrokenPipeError:  # noqa
+                # x3270 was terminated, since we are just quitting anyway, ignore it.
+                pass
+            except socket.error as e:
                 if 'was forcibly closed' not in str(e):
                     raise
                 # this can happen because wc3270 closes the socket before
                 # the read() can happen, causing a socket error
+
             self.is_terminated = True
 
     def is_connected(self):
@@ -279,7 +305,7 @@ class Emulator(object):
         try:
             # this is basically a no-op, but it results in the the current status
             # getting updated
-            self.exec_command('ignore')
+            self.exec_command(b'ignore')
 
             # connected status is like 'C(192.168.1.1)', disconnected is 'N'
             return self.status.connection_state.startswith('C(')
@@ -291,14 +317,15 @@ class Emulator(object):
             Connect to a host
         """
         if not self.app.connect(host):
-            self.exec_command('Connect({0})'.format(host))
+            command = 'Connect({0})'.format(host).encode('ascii')
+            self.exec_command(command)
         self.last_host = host
 
     def reconnect(self):
         """
             Disconnect from the host and re-connect to the same host
         """
-        self.exec_command('Disconnect')
+        self.exec_command(b'Disconnect')
         self.connect(self.last_host)
 
     def wait_for_field(self):
@@ -314,9 +341,10 @@ class Emulator(object):
             Using this method tells the client to wait until a field is
             detected and the cursor has been positioned on it.
         """
-        self.exec_command('Wait({0}, InputField)'.format(self.timeout))
+        self.exec_command('Wait({0}, InputField)'.format(self.timeout).encode('ascii'))
         if self.status.keyboard != 'U':
-            raise KeyboardStateError('keyboard not unlocked, state was: {0}'.format(self.status.keyboard))
+            raise KeyboardStateError('keyboard not unlocked, state was: {0}'.format(
+                self.status.keyboard))
 
     def move_to(self, ypos, xpos):
         """
@@ -326,7 +354,7 @@ class Emulator(object):
         # the screen's co-ordinates are 1 based, but the command is 0 based
         xpos -= 1
         ypos -= 1
-        self.exec_command('MoveCursor({0}, {1})'.format(ypos, xpos))
+        self.exec_command('MoveCursor({0}, {1})'.format(ypos, xpos).encode('ascii'))
 
     def send_string(self, tosend, ypos=None, xpos=None):
         """
@@ -342,28 +370,28 @@ class Emulator(object):
         # escape double quotes in the data to send
         tosend = tosend.replace('"', '\"')
 
-        self.exec_command('String("{0}")'.format(tosend))
+        self.exec_command('String("{0}")'.format(tosend).encode('ascii'))
 
     def send_enter(self):
-        self.exec_command('Enter')
+        self.exec_command(b'Enter')
 
     def send_pf3(self):
-        self.exec_command('PF(3)')
+        self.exec_command(b'PF(3)')
 
     def send_pf4(self):
-        self.exec_command('PF(4)')
+        self.exec_command(b'PF(4)')
 
     def send_pf5(self):
-        self.exec_command('PF(5)')
+        self.exec_command(b'PF(5)')
 
     def send_pf6(self):
-        self.exec_command('PF(6)')
+        self.exec_command(b'PF(6)')
 
     def send_pf7(self):
-        self.exec_command('PF(7)')
+        self.exec_command(b'PF(7)')
 
     def send_pf8(self):
-        self.exec_command('PF(8)')
+        self.exec_command(b'PF(8)')
 
     def string_get(self, ypos, xpos, length):
         """
@@ -375,7 +403,7 @@ class Emulator(object):
         # the screen's co-ordinates are 1 based, but the command is 0 based
         xpos -= 1
         ypos -= 1
-        cmd = self.exec_command('Ascii({0},{1},{2})'.format(ypos, xpos, length))
+        cmd = self.exec_command('Ascii({0},{1},{2})'.format(ypos, xpos, length).encode('ascii'))
         # this usage of ascii should only return a single line of data
         assert len(cmd.data) == 1, cmd.data
         return cmd.data[0]
@@ -397,7 +425,7 @@ class Emulator(object):
             Delete contents in field at current cursor location and positions
             cursor at beginning of field.
         """
-        self.exec_command('DeleteField')
+        self.exec_command(b'DeleteField')
 
     def fill_field(self, ypos, xpos, tosend, length):
         """
@@ -421,4 +449,4 @@ class Emulator(object):
         self.send_string(tosend)
 
     def save_screen(self, file_path):
-        self.exec_command('PrintText(html,file,{0})'.format(file_path))
+        self.exec_command('PrintText(html,file,{0})'.format(file_path).encode('ascii'))

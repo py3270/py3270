@@ -1,4 +1,4 @@
-import sys, os
+import os
 from setuptools import setup, find_packages
 from setuptools.command.develop import develop as STDevelopCmd
 
@@ -7,6 +7,7 @@ from py3270 import VERSION
 cdir = os.path.abspath(os.path.dirname(__file__))
 readme_rst = open(os.path.join(cdir, 'readme.rst')).read()
 changelog_rst = open(os.path.join(cdir, 'changelog.rst')).read()
+
 
 class DevelopCmd(STDevelopCmd):
     def run(self):
@@ -23,7 +24,7 @@ setup(
     name='py3270',
     version=VERSION,
     description="A Python interface to x3270, an IBM 3270 terminal emulator",
-    long_description= readme_rst + '\n\n' + changelog_rst,
+    long_description=readme_rst + '\n\n' + changelog_rst,
     classifiers=[
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
@@ -41,8 +42,8 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     zip_safe=False,
-    install_requires=[],
-    cmdclass = {
+    install_requires=['six'],
+    cmdclass={
         'develop': DevelopCmd
     },
 )
