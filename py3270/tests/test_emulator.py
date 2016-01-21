@@ -115,10 +115,13 @@ class TestEmulator(object):
 
         m_ec.reset_mock()
         em.send_string('foobar', 5, 7)
-        eq_(m_ec.call_args_list, [
-            mock.call(b'MoveCursor(4, 6)'),
-            mock.call(b'String("foobar")'),
-        ])
+        eq_(
+            m_ec.call_args_list,
+            [
+                mock.call(b'MoveCursor(4, 6)'),
+                mock.call(b'String("foobar")'),
+            ]
+        )
 
     @mock.patch('py3270.Emulator.connect')
     @mock.patch('py3270.Emulator.exec_command')
@@ -127,41 +130,53 @@ class TestEmulator(object):
         em.last_host = 'foo'
         em.reconnect()
         eq_(m_ec.call_args_list[0], mock.call(b'Disconnect'))
-        eq_(m_connect.call_args_list, [
-            # call from reconnect()
-            mock.call('foo'),
-        ])
+        eq_(
+            m_connect.call_args_list,
+            [
+                # call from reconnect()
+                mock.call('foo'),
+            ]
+        )
 
     @mock.patch('py3270.Emulator.exec_command')
     def test_fill_field(self, m_ec):
         em = MEmulator()
 
         em.fill_field(7, 9, 'foobar', 6)
-        eq_(m_ec.call_args_list, [
-            mock.call(b'MoveCursor(6, 8)'),
-            mock.call(b'DeleteField'),
-            mock.call(b'String("foobar")'),
-        ])
+        eq_(
+            m_ec.call_args_list,
+            [
+                mock.call(b'MoveCursor(6, 8)'),
+                mock.call(b'DeleteField'),
+                mock.call(b'String("foobar")'),
+            ]
+        )
         m_ec.reset_mock()
 
         em.fill_field(None, None, 'foobar', 6)
-        eq_(m_ec.call_args_list, [
-            mock.call(b'DeleteField'),
-            mock.call(b'String("foobar")'),
-        ])
+        eq_(
+            m_ec.call_args_list,
+            [
+                mock.call(b'DeleteField'),
+                mock.call(b'String("foobar")'),
+            ]
+        )
         m_ec.reset_mock()
 
         em.fill_field(1, None, 'foobar', 6)
-        eq_(m_ec.call_args_list, [
-            mock.call(b'DeleteField'),
-            mock.call(b'String("foobar")'),
-        ])
+        eq_(
+            m_ec.call_args_list,
+            [
+                mock.call(b'DeleteField'),
+                mock.call(b'String("foobar")'),
+            ]
+        )
 
     @mock.patch('py3270.Emulator.exec_command')
     def test_string_get(self, m_ec):
         em = MEmulator()
         m_ec.return_value.data = [b'foobar']
-        result = em.string_get(7,9,5)
+        result = em.string_get(7, 9, 5)
         eq_(result, 'foobar')
         m_ec.assert_called_with(b'Ascii(6,8,5)')
         em.terminate()
@@ -171,17 +186,17 @@ class TestEmulator(object):
     def test_string_get_too_much_data(self, m_ec):
         em = MEmulator()
         m_ec.return_value.data = ['foobar', 'baz']
-        em.string_get(7,9,5)
+        em.string_get(7, 9, 5)
 
     @mock.patch('py3270.Emulator.string_get')
     def test_string_found(self, m_string_get):
         em = MEmulator()
         m_string_get.return_value = 'foobar'
 
-        assert em.string_found(7,9,'foobar')
+        assert em.string_found(7, 9, 'foobar')
         m_string_get.assert_called_once_with(7, 9, 6)
 
-        assert not em.string_found(7,9,'baz')
+        assert not em.string_found(7, 9, 'baz')
 
     @raises(FieldTruncateError, 'length limit 5, but got "foobar"')
     def test_fill_field_length_error(self):
@@ -198,7 +213,7 @@ class TestEmulator(object):
 
     @mock.patch('py3270.Emulator.exec_command')
     def test_wait_for_field_custom_timeout(self, m_ec):
-        em =  MEmulator(timeout=5)
+        em = MEmulator(timeout=5)
         em.status.keyboard = b'U'
         em.wait_for_field()
 
@@ -214,6 +229,7 @@ class TestEmulator(object):
     @mock.patch('py3270.Emulator.exec_command')
     def test_not_is_connected(self, m_ec):
         em = MEmulator()
+
         def assign_status(*args, **kwargs):
             em.status.connection_state = b'N'
         m_ec.side_effect = assign_status
@@ -223,6 +239,7 @@ class TestEmulator(object):
     @mock.patch('py3270.Emulator.exec_command')
     def test_is_connected(self, m_ec):
         em = MEmulator()
+
         def assign_status(*args, **kwargs):
             em.status.connection_state = b'C(192.168.1.1)'
         m_ec.side_effect = assign_status
@@ -289,6 +306,7 @@ class TestCommand(object):
         # running without exception is sufficient for this test
         cmd.execute()
 
+
 class TestExecutableApp(object):
     """
         all these tests used to be part of the emulator testing, but they need to be refactored
@@ -318,5 +336,5 @@ class TestExecutableApp(object):
 
     @mock.patch('py3270.subprocess.Popen')
     def test_sp_creation_for_testing(self, m_popen):
-        em =  TEmulator(_sp=mock.Mock())
+        TEmulator(_sp=mock.Mock())
         assert not m_popen.called
