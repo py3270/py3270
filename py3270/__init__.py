@@ -13,6 +13,12 @@ log = logging.getLogger(__name__)
 
 VERSION = '0.3.1'
 
+"""
+    Python 3+ note: unicode strings should be used when communicating with the Emulator methods.
+    Ascii is used internally when reading from or writing to the 3270 emulator (this includes
+    reading lines, constructing data to write, reading statuses).
+"""
+
 
 class CommandError(Exception):
     pass
@@ -57,15 +63,15 @@ class Command(object):
         while True:
             line = self.app.readline()
             log.debug('stdout line: %s', line.rstrip())
-            if not line.startswith('data:'):
+            if not line.startswith('data:'.encode('ascii')):
                 # ok, we are at the status line
                 self.status_line = line.rstrip()
                 result = self.app.readline().rstrip()
                 log.debug('result line: %s', result)
-                return self.handle_result(result)
+                return self.handle_result(result.decode('ascii'))
 
             # remove the 'data: ' prefix and trailing newline char(s) and store
-            self.data.append(line[6:].rstrip('\n\r'))
+            self.data.append(line[6:].rstrip('\n\r'.encode('ascii')))
 
     def handle_result(self, result):
         # should receive 'ok' for almost everything, but Quit returns a '' for
@@ -77,10 +83,10 @@ class Command(object):
         if result != 'error':
             raise ValueError('expected "ok" or "error" result, but received: {0}'.format(result))
 
-        msg = '[no error message]'
+        msg = b'[no error message]'
         if self.data:
-            msg = ''.join(self.data).rstrip()
-        raise CommandError(msg)
+            msg = ''.encode('ascii').join(self.data).rstrip()
+        raise CommandError(msg.decode('ascii'))
 
 
 class Status(object):
@@ -89,9 +95,9 @@ class Status(object):
     """
     def __init__(self, status_line):
         if not status_line:
-            status_line = ' '*12
-        parts = status_line.split(' ')
-        self.as_string = status_line.rstrip()
+            status_line = (' ' * 12).encode('ascii')
+        parts = status_line.split(' '.encode('ascii'))
+        self.as_string = status_line.rstrip().decode('ascii')
         self.keyboard = parts[0] or None
         self.screen_format = parts[1] or None
         self.field_protection = parts[2] or None
@@ -132,14 +138,15 @@ class ExecutableApp(object):
         """ this is a no-op for all but wc3270 """
         return False
 
+    def close(self):
+        self.sp.kill()
+
     def write(self, data):
         self.sp.stdin.write(data)
         self.sp.stdin.flush()
 
     def readline(self):
-        line = self.sp.stdout.readline()
-        # todo: is line really ascii?
-        return line.decode('ascii')
+        return self.sp.stdout.readline()
 
 
 class x3270App(ExecutableApp):
@@ -177,6 +184,10 @@ class wc3270App(ExecutableApp):
         self.make_socket()
         return True
 
+    def close(self):
+        # failing to close the socket ourselves will result in a ResourceWarning
+        self.socket.close()
+
     def spawn_app(self, host):
         args = ['start', '/wait', self.executable] + self.args
         args.extend(['-scriptport', str(self.script_port), host])
@@ -200,7 +211,8 @@ class wc3270App(ExecutableApp):
                     raise
                 time.sleep(1)
                 count += 1
-        self.socket_fh = sock.makefile()
+        # open a file handle for the socket that can both read and write, using bytestrings
+        self.socket_fh = sock.makefile(mode='rwb')
 
     def write(self, data):
         if self.socket_fh is None:
@@ -249,6 +261,14 @@ class Emulator(object):
         self.timeout = timeout
         self.last_host = None
 
+    def __del__(self):
+        """
+            Since an emulator creates a process (and sometimes a socket handle), it is good practice
+            to clean these up when done. Note, not terminating at this point will usually have no
+            ill effect - only Python 3+ on Windows had problems in this regard.
+        """
+        self.terminate()
+
     def create_app(self, visible):
         if os.name == 'nt':
             if visible:
@@ -295,6 +315,8 @@ class Emulator(object):
                 # this can happen because wc3270 closes the socket before
                 # the read() can happen, causing a socket error
 
+            self.app.close()
+
             self.is_terminated = True
 
     def is_connected(self):
@@ -308,7 +330,7 @@ class Emulator(object):
             self.exec_command(b'ignore')
 
             # connected status is like 'C(192.168.1.1)', disconnected is 'N'
-            return self.status.connection_state.startswith('C(')
+            return self.status.connection_state.startswith(b'C(')
         except NotConnectedException:
             return False
 
@@ -342,9 +364,9 @@ class Emulator(object):
             detected and the cursor has been positioned on it.
         """
         self.exec_command('Wait({0}, InputField)'.format(self.timeout).encode('ascii'))
-        if self.status.keyboard != 'U':
+        if self.status.keyboard != b'U':
             raise KeyboardStateError('keyboard not unlocked, state was: {0}'.format(
-                self.status.keyboard))
+                self.status.keyboard.decode('ascii')))
 
     def move_to(self, ypos, xpos):
         """
@@ -406,7 +428,7 @@ class Emulator(object):
         cmd = self.exec_command('Ascii({0},{1},{2})'.format(ypos, xpos, length).encode('ascii'))
         # this usage of ascii should only return a single line of data
         assert len(cmd.data) == 1, cmd.data
-        return cmd.data[0]
+        return cmd.data[0].decode('ascii')
 
     def string_found(self, ypos, xpos, string):
         """

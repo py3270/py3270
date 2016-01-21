@@ -4,6 +4,8 @@ Change Log
 0.3.1 released <in progress>
 ============================
 
+- fix testing support for Python 3
+- fix Windows support for Python 3
 - move to github, related updates to vcs-specific files
 
 0.3.0 released 2015-07-29
