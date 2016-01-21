@@ -4,7 +4,7 @@ Change Log
 0.3.1 released <in progress>
 ============================
 
--
+- move to github, related updates to vcs-specific files
 
 0.3.0 released 2015-07-29
 =========================

@@ -1,0 +1,5 @@
+*.komodo*
+*.pyc
+*.egg-info
+.coverage
+dist/

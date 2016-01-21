@@ -1,7 +1,0 @@
-
-syntax: glob
-*.pyc
-*komodo*
-.coverage
-*.egg-info
-dist
