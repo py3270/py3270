@@ -1,2 +1,3 @@
+recursive-include py3270 *
 global-exclude *.pyc
 include *.rst

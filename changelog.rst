@@ -1,6 +1,11 @@
 Change Log
 ----------
 
+0.3.3 released 2016-01-21
+=========================
+
+- continued fix to broken version import (include version in manifest)
+
 0.3.2 released 2016-01-21
 =========================
 
