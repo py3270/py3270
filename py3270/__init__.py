@@ -11,8 +11,6 @@ import warnings
 
 log = logging.getLogger(__name__)
 
-VERSION = '0.3.1'
-
 """
     Python 3+ note: unicode strings should be used when communicating with the Emulator methods.
     Ascii is used internally when reading from or writing to the 3270 emulator (this includes

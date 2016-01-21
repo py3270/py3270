@@ -73,5 +73,5 @@ There are more x3270 commands that the Emulator could have methods for. That
 being said, I believe most x3270 functionality can be supported at a lower-level
 by the use of Emulator.exec_command().
 
-The `py3270 tip <http://bitbucket.org/rsyring/py3270/get/tip.zip#egg=py3270-dev>`_
-is installable via `easy_install` with ``easy_install py3270==dev``.
+py3270 is installable via `pip` with ``pip install py3270`` or `easy_install` with
+``easy_install py3270``.

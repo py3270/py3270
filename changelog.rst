@@ -1,8 +1,13 @@
 Change Log
 ----------
 
-0.3.1 released <in progress>
-============================
+0.3.2 released 2016-01-21
+=========================
+
+- fix broken version import in setup.py (broken in 0.3.0 and 0.3.1)
+
+0.3.1 released 2016-01-21
+=========================
 
 - fix testing support for Python 3
 - fix Windows support for Python 3

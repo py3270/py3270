@@ -2,11 +2,10 @@ import os
 from setuptools import setup, find_packages
 from setuptools.command.develop import develop as STDevelopCmd
 
-from py3270 import VERSION
-
 cdir = os.path.abspath(os.path.dirname(__file__))
 readme_rst = open(os.path.join(cdir, 'readme.rst')).read()
 changelog_rst = open(os.path.join(cdir, 'changelog.rst')).read()
+VERSION = open(os.path.join(cdir, 'py3270', 'version.txt')).read().strip()
 
 
 class DevelopCmd(STDevelopCmd):
