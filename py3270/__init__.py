@@ -186,7 +186,7 @@ class wc3270App(ExecutableApp):
         # failing to close the socket ourselves will result in a ResourceWarning
         self.socket.close()
 
-    def spawn_app(self, host):
+    def spawn_app(self, host, startupinfo=None):
         args = ['start', '/wait', self.executable] + self.args
         args.extend(['-scriptport', str(self.script_port), host])
         self.sp = subprocess.Popen(
@@ -195,6 +195,7 @@ class wc3270App(ExecutableApp):
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
+            startupinfo=startupinfo,
         )
 
     def make_socket(self):
@@ -224,12 +225,18 @@ class wc3270App(ExecutableApp):
         return self.socket_fh.readline()
 
 
-class ws3270App(ExecutableApp):
+class ws3270App(wc3270App):
     executable = 'ws3270'
     # see notes for args in x3270App
     args = [
         '-xrm', 'ws3270.unlockDelay: False',
     ]
+
+    def spawn_app(self, host):
+        startupinfo = subprocess.STARTUPINFO()
+        startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+        startupinfo.wShowWindow = subprocess.SW_HIDE
+        super(ws3270App, self).spawn_app(host, startupinfo=startupinfo)
 
 
 class EmulatorBase(object):
@@ -331,6 +338,8 @@ class Emulator(object):
             return self.status.connection_state.startswith(b'C(')
         except NotConnectedException:
             return False
+        except CommandError:
+            return True
 
     def connect(self, host):
         """
