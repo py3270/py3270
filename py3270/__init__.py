@@ -38,6 +38,10 @@ class FieldTruncateError(Exception):
     pass
 
 
+class BrokenPipeError(Exception):
+    pass
+
+
 class Command(object):
     """
         Represents a x3270 script command
@@ -426,7 +430,7 @@ class Emulator(object):
         cmd = self.exec_command('Ascii({0},{1},{2})'.format(ypos, xpos, length).encode('ascii'))
         # this usage of ascii should only return a single line of data
         assert len(cmd.data) == 1, cmd.data
-        return cmd.data[0].decode('ascii')
+        return cmd.data[0]
 
     def string_found(self, ypos, xpos, string):
         """
