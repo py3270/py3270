@@ -413,6 +413,9 @@ class Emulator(object):
     def send_pf8(self):
         self.exec_command(b'PF(8)')
 
+    def send_pf(self, value):
+        self.exec_command(b'PF({})'.format(value))
+
     def string_get(self, ypos, xpos, length):
         """
             Get a string of `length` at screen co-ordinates `ypos`/`xpos`
