@@ -38,8 +38,11 @@ class FieldTruncateError(Exception):
     pass
 
 
-class BrokenPipeError(Exception):
-    pass
+try:
+    BrokenPipeError = BrokenPipeError
+except NameError:  # BrokenPipeError is available until py3k
+    class BrokenPipeError(Exception):
+        pass
 
 
 class Command(object):
