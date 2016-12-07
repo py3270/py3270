@@ -433,7 +433,7 @@ class Emulator(object):
         cmd = self.exec_command('Ascii({0},{1},{2})'.format(ypos, xpos, length).encode('ascii'))
         # this usage of ascii should only return a single line of data
         assert len(cmd.data) == 1, cmd.data
-        return cmd.data[0]
+        return cmd.data[0].decode('ascii')
 
     def string_found(self, ypos, xpos, string):
         """
