@@ -414,7 +414,8 @@ class Emulator(object):
         self.exec_command(b'PF(8)')
 
     def send_pf(self, value):
-        self.exec_command(b'PF({})'.format(value))
+        pf = 'PF({})'.format(value)
+        self.exec_command(bytes(pf.encode('utf-8')))
 
     def string_get(self, ypos, xpos, length):
         """
