@@ -1,10 +1,10 @@
 Change Log
 ----------
 
-0.3.4 released <in progress>
+0.3.4 released 2017-07-24
 ============================
 
--
+- Fix BrokenPipeError issue WRT Python 2.7
 
 0.3.3 released 2016-01-21
 =========================
