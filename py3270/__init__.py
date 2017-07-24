@@ -11,6 +11,14 @@ import warnings
 
 log = logging.getLogger(__name__)
 
+
+try:
+    BrokenPipeError
+except NameError:
+    class BrokenPipeError(Exception):
+        pass
+
+
 """
     Python 3+ note: unicode strings should be used when communicating with the Emulator methods.
     Ascii is used internally when reading from or writing to the 3270 emulator (this includes
