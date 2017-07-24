@@ -38,8 +38,8 @@ setup(
         'Topic :: Terminals :: Terminal Emulators/X Terminals'
     ],
     author='Randy Syring',
-    author_email='randy@thesyrings.us',
-    url='https://bitbucket.org/rsyring/py3270',
+    author_email='randy.syring@level12.io',
+    url='https://github.com/level12/py3270',
     license='BSD',
     packages=find_packages(),
     include_package_data=True,
@@ -49,3 +49,4 @@ setup(
         'develop': DevelopCmd
     },
 )
+
