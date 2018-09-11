@@ -127,7 +127,9 @@ class ExecutableApp(object):
         '-xrm', 's3270.unlockDelay: False'
     ]
 
-    def __init__(self):
+    def __init__(self, args):
+        if args:
+            self.args = ExecutableApp.args + args
         self.sp = None
         self.spawn_app()
 
@@ -181,7 +183,9 @@ class wc3270App(ExecutableApp):
     args = ['-xrm', 'wc3270.unlockDelay: False']
     script_port = 17938
 
-    def __init__(self):
+    def __init__(self, args):
+        if args:
+            self.args = wc3270App.args + args
         self.sp = None
         self.socket_fh = None
 
@@ -251,17 +255,18 @@ class Emulator(object):
         with it.
     """
 
-    def __init__(self, visible=False, timeout=30, app=None, _sp=None):
+    def __init__(self, visible=False, timeout=30, args=None, app=None, _sp=None):
         """
             Create an emulator instance
 
             `visible` controls which executable will be used.
             `timeout` controls the timeout paramater to any Wait() command sent
                 to x3270.
+            `args` allows sending parameters to the emulator executable 
             `_sp` is normally not used but can be set to a mock object
                 during testing.
         """
-        self.app = app or self.create_app(visible)
+        self.app = app or self.create_app(visible, args)
         self.is_terminated = False
         self.status = Status(None)
         self.timeout = timeout
@@ -275,14 +280,14 @@ class Emulator(object):
         """
         self.terminate()
 
-    def create_app(self, visible):
+    def create_app(self, visible, args):
         if os.name == 'nt':
             if visible:
-                return wc3270App()
-            return ws3270App()
+                return wc3270App(args)
+            return ws3270App(args)
         if visible:
-            return x3270App()
-        return s3270App()
+            return x3270App(args)
+        return s3270App(args)
 
     def exec_command(self, cmdstr):
         """
