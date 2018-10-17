@@ -245,7 +245,7 @@ class ws3270App(ExecutableApp):
 
 
 class EmulatorBase(object):
-    def __init__(self, visible=False, timeout=30, app=None, _sp=None):
+    def __init__(self, visible=False, timeout=30, app=None):
         raise Exception("EmulatorBase has been replaced by Emulator.  See readme.rst.")
 
 
@@ -255,15 +255,13 @@ class Emulator(object):
         with it.
     """
 
-    def __init__(self, visible=False, timeout=30, app=None, _sp=None, args=None):
+    def __init__(self, visible=False, timeout=30, app=None, args=None):
         """
             Create an emulator instance
 
             `visible` controls which executable will be used.
             `timeout` controls the timeout paramater to any Wait() command sent
                 to x3270.
-            `_sp` is normally not used but can be set to a mock object
-                during testing.
             `args` allows sending parameters to the emulator executable 
         """
         self.app = app or self.create_app(visible, args)
