@@ -1,3 +1,6 @@
+
+|license| |pypi| |coverage| |bugs| |code smells| |vulnerabilities| |duplicated lines|
+
 Intro
 -----
 
@@ -9,7 +12,9 @@ Example
 
 The x3270 executables need to be on your PATH!
 
-A brief example of usage::
+A brief example of usage:
+
+.. code:: python
 
     from py3270 import Emulator
 
@@ -75,3 +80,31 @@ by the use of Emulator.exec_command().
 
 py3270 is installable via `pip` with ``pip install py3270`` or `easy_install` with
 ``easy_install py3270``.
+
+.. |license| image:: https://img.shields.io/badge/License-BSD%203--Clause-blue.svg
+    :target: https://opensource.org/licenses/BSD-3-Clause
+    :alt: BSD-3-Clause
+
+.. |pypi| image:: https://img.shields.io/pypi/v/py3270.svg
+    :target: https://pypi.python.org/pypi/py3270
+    :alt: Latest version released on PyPi
+
+.. |coverage| image:: https://sonarcloud.io/api/project_badges/measure?project=py3270&metric=coverage
+    :target: https://sonarcloud.io/component_measures?id=py3270&metric=coverage
+    :alt: Test coverage
+
+.. |bugs| image:: https://sonarcloud.io/api/project_badges/measure?project=py3270&metric=bugs
+    :target: https://sonarcloud.io/component_measures?id=py3270&metric=bugs
+    :alt: Bugs
+
+.. |code smells| image:: https://sonarcloud.io/api/project_badges/measure?project=py3270&metric=code_smells
+    :target: https://sonarcloud.io/component_measures?id=py3270&metric=code_smells
+    :alt: Code Smells
+
+.. |vulnerabilities| image:: https://sonarcloud.io/api/project_badges/measure?project=py3270&metric=vulnerabilities
+    :target: https://sonarcloud.io/component_measures?id=py3270&metric=vulnerabilities
+    :alt: Vulnerabilities    
+
+.. |duplicated lines| image:: https://sonarcloud.io/api/project_badges/measure?project=py3270&metric=duplicated_lines_density
+    :target: https://sonarcloud.io/component_measures?id=py3270&metric=duplicated_lines_density
+    :alt: Duplicated Lines Density
