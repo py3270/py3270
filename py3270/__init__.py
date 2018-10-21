@@ -159,7 +159,7 @@ class ExecutableApp(object):
         return self.sp.stdout.readline()
 
 
-class x3270App(ExecutableApp):
+class X3270App(ExecutableApp):
     executable = "x3270"
     # Per Paul Mattes, in the first days of x3270, there were servers that
     # would unlock the keyboard before they had processed the command. To
@@ -169,7 +169,7 @@ class x3270App(ExecutableApp):
     args = ["-xrm", "x3270.unlockDelay: False", "-script"]
 
 
-class s3270App(ExecutableApp):
+class S3270App(ExecutableApp):
     executable = "s3270"
     # see notes for args in x3270App
     args = ["-xrm", "s3270.unlockDelay: False"]
@@ -179,7 +179,7 @@ class NotConnectedException(Exception):
     pass
 
 
-class wc3270App(ExecutableApp):
+class Wc3270App(ExecutableApp):
     executable = "wc3270"
     # see notes for args in x3270App
     args = ["-xrm", "wc3270.unlockDelay: False"]
@@ -187,7 +187,7 @@ class wc3270App(ExecutableApp):
 
     def __init__(self, args):
         if args:
-            self.args = wc3270App.args + args
+            self.args = Wc3270App.args + args
         self.sp = None
         self.socket_fh = None
 
@@ -238,7 +238,7 @@ class wc3270App(ExecutableApp):
         return self.socket_fh.readline()
 
 
-class ws3270App(ExecutableApp):
+class Ws3270App(ExecutableApp):
     executable = "ws3270"
     # see notes for args in x3270App
     args = ["-xrm", "ws3270.unlockDelay: False"]
@@ -281,11 +281,11 @@ class Emulator(object):
     def create_app(self, visible, args):
         if os.name == "nt":
             if visible:
-                return wc3270App(args)
-            return ws3270App(args)
+                return Wc3270App(args)
+            return Ws3270App(args)
         if visible:
-            return x3270App(args)
-        return s3270App(args)
+            return X3270App(args)
+        return S3270App(args)
 
     def exec_command(self, cmdstr):
         """

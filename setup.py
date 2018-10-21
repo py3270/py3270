@@ -12,7 +12,7 @@ VERSION = open(os.path.join(cdir, "py3270", "version.txt")).read().strip()
 class DevelopCmd(STDevelopCmd):
     def run(self):
         # add in requirements for testing only when using the develop command
-        self.distribution.install_requires.extend(["pytest", "coverage"])
+        self.distribution.install_requires.extend(["pytest", "pytest-cov"])
         STDevelopCmd.run(self)
 
 
