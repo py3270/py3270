@@ -217,7 +217,7 @@ class Wc3270App(ExecutableApp):
         count = 0
         while count < 15:
             try:
-                sock.connect(("127.0.0.1", self.script_port))
+                sock.connect(('localhost', self.script_port))
                 break
             except socket.error as e:
                 log.warn(e)
