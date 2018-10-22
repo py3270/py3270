@@ -150,7 +150,11 @@ class ExecutableApp(object):
         return False
 
     def close(self):
-        self.sp.kill()
+        if self.sp.poll() is None:
+            self.sp.terminate()        
+        return_code = self.sp.returncode or self.sp.poll()
+        log.debug("return code: %d", return_code)
+        return return_code
 
     def write(self, data):
         self.sp.stdin.write(data)
