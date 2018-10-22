@@ -481,7 +481,7 @@ class Emulator(object):
             raises: FieldTruncateError if `tosend` is longer than
                 `length`.
         """
-        if length - len(tosend) < 0:
+        if length < len(tosend):
             raise FieldTruncateError('length limit %d, but got "%s"' % (length, tosend))
         if xpos is not None and ypos is not None:
             self.move_to(ypos, xpos)
