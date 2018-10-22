@@ -151,7 +151,7 @@ class ExecutableApp(object):
 
     def close(self):
         if self.sp.poll() is None:
-            self.sp.terminate()        
+            self.sp.terminate()
         return_code = self.sp.returncode or self.sp.poll()
         log.debug("return code: %d", return_code)
         return return_code
@@ -221,7 +221,7 @@ class Wc3270App(ExecutableApp):
         count = 0
         while count < 15:
             try:
-                sock.connect(('localhost', self.script_port))
+                sock.connect(("localhost", self.script_port))
                 break
             except socket.error as e:
                 log.warn(e)
