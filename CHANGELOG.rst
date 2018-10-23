@@ -1,10 +1,14 @@
 Change Log
 ----------
 
-0.3.5 released <in development>
+0.3.5 released 2018-10-23
 ============================
 
-- ?
+- Added explicit license
+- Reorganizing project structure
+- Fix exception handling in sockets
+- Fix exception in terminate command (wc3270)
+- Code styling and minor fixes
 
 0.3.4 released 2017-07-24
 ============================
@@ -36,7 +40,7 @@ Change Log
 0.2.0 released 2014-03-28
 =========================
 
-- Add Windows support, but not tested thoroughly.  Consider Windows support Experimental.
+- Add Windows support, but not tested thoroughly.Consider Windows supportExperimental.
 - use x3270 executables from PATH instead of requiring ExamBase to be subclassed
 - fix buffering problems when writing to x3270 subprocess
 
