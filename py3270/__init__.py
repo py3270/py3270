@@ -415,6 +415,12 @@ class Emulator(object):
     def send_enter(self):
         self.exec_command(b"Enter")
 
+    def send_tab(self):
+        self.exec_command(b"Tab")
+    
+    def send_esc(self):
+        self.exec_command(b"Essc")
+
     def send_pf3(self):
         self.exec_command(b"PF(3)")
 
