@@ -415,6 +415,9 @@ class Emulator(object):
     def send_enter(self):
         self.exec_command(b"Enter")
 
+    def send_clear(self):
+        self.exec_command(b"Clear")
+
     def send_pf3(self):
         self.exec_command(b"PF(3)")
 
