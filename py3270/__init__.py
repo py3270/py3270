@@ -410,7 +410,7 @@ class Emulator(object):
         # escape double quotes in the data to send
         tosend = tosend.replace('"', '"')
 
-        self.exec_command('String("{0}")'.format(tosend).encode("ascii"))
+        self.exec_command('String("{0}")'.format(tosend).encode("utf-8"))
 
     def send_enter(self):
         self.exec_command(b"Enter")
@@ -451,11 +451,11 @@ class Emulator(object):
         xpos -= 1
         ypos -= 1
         cmd = self.exec_command(
-            "Ascii({0},{1},{2})".format(ypos, xpos, length).encode("ascii")
+            "Ascii({0},{1},{2})".format(ypos, xpos, length).encode("urf-8")
         )
         # this usage of ascii should only return a single line of data
         assert len(cmd.data) == 1, cmd.data
-        return cmd.data[0].decode("ascii")
+        return cmd.data[0].decode("utf-8")
 
     def string_found(self, ypos, xpos, string):
         """
