@@ -451,7 +451,7 @@ class Emulator(object):
         xpos -= 1
         ypos -= 1
         cmd = self.exec_command(
-            "Ascii({0},{1},{2})".format(ypos, xpos, length).encode("urf-8")
+            "Ascii({0},{1},{2})".format(ypos, xpos, length).encode("utf-8")
         )
         # this usage of ascii should only return a single line of data
         assert len(cmd.data) == 1, cmd.data
