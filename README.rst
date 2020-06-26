@@ -34,7 +34,7 @@ A brief example of usage:
     em.wait_for_field()
 
     # maybe look for a status message
-    if not em.string_found(1, 2, 'login succesful'):
+    if not em.string_found(1, 2, 'login successful'):
         abort()
 
     # do something useful
