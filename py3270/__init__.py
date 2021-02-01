@@ -500,3 +500,15 @@ class Emulator(object):
     def save_screen(self, file_path):
         self.exec_command("PrintText(html,file,{0})".format(file_path).encode("ascii"))
 
+    def download(self, host_file, file_path, buffer_size=None):
+        """download data into file"""
+
+        # 300K = 309600
+        buffer_size = buffer_size or 309600
+        command = "Transfer(HostFile='{}',LocalFile={},Exist=replace,BufferSize={})".format(
+                host_file, file_path, buffer_size)
+
+        self.send_enter()
+        self.wait_for_field()
+
+        return self.exec_command(command)
