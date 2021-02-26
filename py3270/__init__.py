@@ -52,13 +52,13 @@ class FieldTruncateError(Exception):
 
 class VerifyError(Exception):
 
-    def __init__(self, verifyString, timeout, em3270):
+    def __init__(self, verify_string, timeout, em3270):
 
         self.screen = em3270.get_screen()
         self.status = em3270.status
 
         super(VerifyError, self).__init__(
-            "Failed to verify string: {} in timeout: {}\nStatus: {}".format(verifyString, timeout, self.status))
+            "Failed to verify string: {} in timeout: {}\nStatus: {}".format(verify_string, timeout, self.status))
 
 class Command(object):
     """
@@ -422,7 +422,7 @@ class Emulator(object):
 
         self.exec_command('String("{0}")'.format(tosend).encode("utf-8"))
 
-    def send_cmd_verify(self, tosend, verifyString, ypos=None, xpos=None, timeout=60):
+    def send_cmd_verify(self, tosend, verify_string, ypos=None, xpos=None, timeout=60):
         """
             Send a string to the screen at the current cursor location or at
             screen co-ordinates `ypos`/`xpos` if they are both given.
@@ -434,7 +434,7 @@ class Emulator(object):
         """
         self.send_string(tosend, ypos, xpos)
         self.send_enter()
-        self.verify_string(verifyString, timeout)
+        self.verify_string(verify_string, timeout)
 
     def send_enter(self):
         self.exec_command(b"Enter")
@@ -531,7 +531,7 @@ class Emulator(object):
 
         self.exec_command(b'Snap')
         cmd = self.exec_command(b'Snap(Ascii)')
-        screen = [byteOutput.decode('ascii') for byteOutput in cmd.data]
+        screen = [byte_output.decode('ascii') for byte_output in cmd.data]
 
         return screen
 
@@ -541,17 +541,17 @@ class Emulator(object):
             otherwise.
         """
 
-        sleepTime = .5
-        tryCount = 0
+        sleep_time = .5
+        try_count = 0
 
-        while tryCount < timeout:
-            screenBuffer = self.get_screen()
+        while try_count < timeout:
+            screen_buffer = self.get_screen()
 
-            for bufferSegment in screenBuffer:
-                if string in bufferSegment:
+            for buffer_segment in screen_buffer:
+                if string in buffer_segment:
                     return(True)
             
-            tryCount += sleepTime
-            time.sleep(sleepTime)
+            try_count += sleep_time
+            time.sleep(sleep_time)
         
         raise VerifyError(string, timeout, self)
