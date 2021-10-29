@@ -440,7 +440,7 @@ class Emulator(object):
         pf = "PF({})".format(value)
         self.exec_command(bytes(pf.encode("utf-8")))
 
-    def string_get(self, ypos, xpos, length):
+    def string_get(self, ypos, xpos, length, decode="utf-8"):
         """
             Get a string of `length` at screen co-ordinates `ypos`/`xpos`
 
@@ -455,9 +455,9 @@ class Emulator(object):
         )
         # this usage of ascii should only return a single line of data
         assert len(cmd.data) == 1, cmd.data
-        return cmd.data[0].decode("utf-8")
+        return cmd.data[0].decode(decode)
 
-    def string_found(self, ypos, xpos, string):
+    def string_found(self, ypos, xpos, string, decode="utf-8"):
         """
             Return True if `string` is found at screen co-ordinates
             `ypos`/`xpos`, False otherwise.
@@ -465,7 +465,7 @@ class Emulator(object):
             Co-ordinates are 1 based, as listed in the status area of the
             terminal.
         """
-        found = self.string_get(ypos, xpos, len(string))
+        found = self.string_get(ypos, xpos, len(string), decode=decode)
         log.debug('string_found() saw "{0}"'.format(found))
         return found == string
 
