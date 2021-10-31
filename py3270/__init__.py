@@ -108,6 +108,12 @@ class Status(object):
     """
 
     def __init__(self, status_line):
+        self.update(status_line)
+
+    def __str__(self):
+        return "STATUS: {0}".format(self.as_string)
+
+    def update(self, status_line):
         if not status_line:
             status_line = (" " * 12).encode("ascii")
         parts = status_line.split(" ".encode("ascii"))
@@ -124,10 +130,6 @@ class Status(object):
         self.cursor_col = parts[9] or None
         self.window_id = parts[10] or None
         self.exec_time = parts[11] or None
-
-    def __str__(self):
-        return "STATUS: {0}".format(self.as_string)
-
 
 class ExecutableApp(object):
     executable = None
@@ -308,7 +310,7 @@ class Emulator(object):
         c.execute()
         elapsed = time.time() - start
         log.debug("elapsed execution: {0}".format(elapsed))
-        self.status = Status(c.status_line)
+        self.status.update(c.status_line)
 
         return c
 
