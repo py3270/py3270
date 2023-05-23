@@ -188,11 +188,11 @@ class Wc3270App(ExecutableApp):
     executable = "wc3270"
     # see notes for args in x3270App
     args = ["-xrm", "wc3270.unlockDelay: False"]
-    script_port = 17938
 
-    def __init__(self, args):
+    def __init__(self, args=None, script_port=17938):
         if args:
             self.args = Wc3270App.args + args
+        self.script_port = script_port
         self.sp = None
         self.socket_fh = None
 
