@@ -153,7 +153,7 @@ class ExecutableApp(object):
         if self.sp.poll() is None:
             self.sp.terminate()
         return_code = self.sp.returncode or self.sp.poll()
-        log.debug("return code: %d", return_code)
+        log.debug("return code: %s", return_code)
         return return_code
 
     def write(self, data):
