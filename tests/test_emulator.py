@@ -135,7 +135,7 @@ class TestEmulator(object):
         m_string_get.return_value = "foobar"
 
         assert em.string_found(7, 9, "foobar")
-        m_string_get.assert_called_once_with(7, 9, 6)
+        m_string_get.assert_called_once_with(7, 9, 6, decode="utf-8")
 
         assert not em.string_found(7, 9, "baz")
 
