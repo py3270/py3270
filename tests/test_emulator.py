@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
-
+import re
 from unittest import mock
 
 import pytest
@@ -18,7 +18,7 @@ from py3270 import (
 class TestEmulator(object):
     def test_emulatorbase_exception(self):
         with pytest.raises(
-            Exception, message="EmulatorBase has been replaced by Emulator."
+            Exception, match=re.escape("EmulatorBase has been replaced by Emulator.")
         ):
             EmulatorBase()
 
@@ -41,7 +41,7 @@ class TestEmulator(object):
     def test_command_after_terminate(self, m_cmd):
         em = MEmulator.mock()
         em.terminate()
-        with pytest.raises(TerminatedError, message="Expecting TerminatedError"):
+        with pytest.raises(TerminatedError, match=re.escape("TerminalClient instance has been terminated")):
             em.connect("localhost")
 
     @mock.patch("py3270.Emulator.exec_command")
@@ -126,7 +126,7 @@ class TestEmulator(object):
     def test_string_get_too_much_data(self, m_ec):
         em = MEmulator.mock()
         m_ec.return_value.data = ["foobar", "baz"]
-        with pytest.raises(AssertionError, message="Expecting AssertionError"):
+        with pytest.raises(AssertionError):
             em.string_get(7, 9, 5)
 
     @mock.patch("py3270.Emulator.string_get")
@@ -160,7 +160,7 @@ class TestEmulator(object):
         em = MEmulator.mock()
         em.status.keyboard = b"E"
         with pytest.raises(
-            KeyboardStateError, message="keyboard not unlocked, state was: E"
+            KeyboardStateError, match=re.escape("keyboard not unlocked, state was: E")
         ):
             em.wait_for_field()
 
@@ -189,6 +189,6 @@ class TestEmulator(object):
     def test_fill_field_length_error(self):
         em = MEmulator.mock()
         with pytest.raises(
-            FieldTruncateError, message='length limit 5, but got "foobar"'
+            FieldTruncateError, match=re.escape('length limit 5, but got "foobar"')
         ):
             em.fill_field(1, 1, "foobar", 5)

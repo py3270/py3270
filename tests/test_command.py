@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
-
+import re
 from unittest import mock
 
 from pytest import raises
@@ -13,7 +13,7 @@ class TestCommand(object):
     def test_defaults(self):
         cmd = MCommand()
         assert cmd.cmdstr == b"testcmd"
-        assert cmd.status_line == None
+        assert cmd.status_line is None
         assert cmd.data == []
 
     @mock.patch.object(ExamApp, "write")
@@ -40,25 +40,25 @@ class TestCommand(object):
         data = "data: some kind \n"
         data += "data: of error\n"
         cmd = MCommand(data, result="error")
-        with raises(CommandError, message="some kind of error"):
+        with raises(CommandError, match="some kind of error"):
             cmd.execute()
 
     def test_error_response_no_data(self):
         cmd = MCommand(result="error")
-        with raises(CommandError, message="[no error message]"):
+        with raises(CommandError, match="[no error message]"):
             cmd.execute()
 
     def test_unexpected_result(self):
         cmd = MCommand(result="foobar")
         with raises(
-            ValueError, message='expected "ok" or "error" result, but received: foobar'
+            ValueError, match=re.escape('expected "ok" or "error" result, but received: foobar')
         ):
             cmd.execute()
 
     def test_blank_result(self):
         cmd = MCommand(result="")
         with raises(
-            ValueError, message='expected "ok" or "error" result, but received: '
+            ValueError, match=re.escape('expected "ok" or "error" result, but received: ')
         ):
             cmd.execute()
 
